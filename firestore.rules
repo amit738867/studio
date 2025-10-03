@@ -1,0 +1,85 @@
+/**
+ * @file Overview
+ * This ruleset enforces a hybrid security model, combining public access with owner-based restrictions.
+ *
+ * @dataStructure
+ * - /certificateTemplates/{certificateTemplateId}: Stores publicly accessible certificate templates.
+ * - /users/{userId}/campaigns/{campaignId}: Stores campaign data specific to each user.
+ * - /users/{userId}/campaigns/{campaignId}/deliveryStatuses/{deliveryStatusId}: Stores delivery statuses for certificates within a campaign.
+ *
+ * @keySecurityDecisions
+ * - Certificate templates are publicly readable but lack update/delete protection.
+ * - Campaigns and delivery statuses are strictly user-owned, residing under the /users/{userId} path.
+ * - Listing of all certificate templates is allowed for everyone. Listing of campaigns or delivery statuses is restricted to the owner.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Allows anyone to read certificate templates, but restricts creation, updates, and deletes.
+     * @path /certificateTemplates/{certificateTemplateId}
+     * @allow (get, list) Any authenticated or unauthenticated user can read certificate templates.
+     * @allow (create) No one can create certificate templates.
+     * @deny (create) N/A
+     * @deny (update) No one can update certificate templates.
+     * @deny (delete) No one can delete certificate templates.
+     * @principle Public read, restricted write access.
+     */
+    match /certificateTemplates/{certificateTemplateId} {
+      allow get, list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Manages campaigns owned by a specific user.
+     * @path /users/{userId}/campaigns/{campaignId}
+     * @allow (create) User can create a campaign if the userId matches their auth.uid.
+     * @allow (get, list) User can read campaign data if the userId matches their auth.uid.
+     * @allow (update, delete) User can update/delete a campaign if the userId matches their auth.uid and the campaign exists.
+     * @deny (create) User cannot create a campaign if the userId does not match their auth.uid.
+     * @deny (get, list) User cannot read campaign data if the userId does not match their auth.uid.
+     * @deny (update, delete) User cannot update/delete a campaign if the userId does not match their auth.uid or the campaign does not exist.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
+     */
+    match /users/{userId}/campaigns/{campaignId} {
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == campaignId;
+      allow get, list: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId) && resource.data.id == request.resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages delivery statuses for a campaign owned by a specific user.
+     * @path /users/{userId}/campaigns/{campaignId}/deliveryStatuses/{deliveryStatusId}
+     * @allow (create) User can create a delivery status if the userId matches their auth.uid.
+     * @allow (get, list) User can read delivery status data if the userId matches their auth.uid.
+     * @allow (update, delete) User can update/delete a delivery status if the userId matches their auth.uid and the delivery status exists.
+     * @deny (create) User cannot create a delivery status if the userId does not match their auth.uid.
+     * @deny (get, list) User cannot read delivery status data if the userId does not match their auth.uid.
+     * @deny (update, delete) User cannot update/delete a delivery status if the userId does not match their auth.uid or the delivery status does not exist.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
+     */
+    match /users/{userId}/campaigns/{campaignId}/deliveryStatuses/{deliveryStatusId} {
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == deliveryStatusId;
+      allow get, list: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId) && resource.data.id == request.resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+  }
+}
