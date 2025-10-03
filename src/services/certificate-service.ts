@@ -3,7 +3,20 @@
 import QRCode from 'qrcode';
 import { storage } from '@/firebase/admin';
 import { Readable } from 'stream';
-import { createCanvas, loadImage } from 'canvas';
+
+// Conditional import for canvas to handle build time issues
+let createCanvas: any;
+let loadImage: any;
+
+try {
+  const canvasModule = require('canvas');
+  createCanvas = canvasModule.createCanvas;
+  loadImage = canvasModule.loadImage;
+} catch (error) {
+  console.warn('Canvas module not available, using fallback for certificate generation');
+  createCanvas = null;
+  loadImage = null;
+}
 
 export interface CertificateData {
   id: string;
@@ -79,8 +92,16 @@ export async function generateAndStoreCertificate(certificateData: CertificateDa
       }
     } else {
       // Development: Store in memory
-      const base64Image = imageBuffer.toString('base64');
-      imageUrl = `data:image/png;base64,${base64Image}`;
+      // Check if it's an SVG buffer
+      if (imageBuffer.toString('utf-8').startsWith('<svg')) {
+        // SVG fallback
+        const base64Svg = imageBuffer.toString('base64');
+        imageUrl = `data:text/svg+xml;base64,${base64Svg}`;
+      } else {
+        // Regular PNG image
+        const base64Image = imageBuffer.toString('base64');
+        imageUrl = `data:image/png;base64,${base64Image}`;
+      }
       console.log('Certificate stored in memory (development mode)');
     }
     
@@ -136,6 +157,12 @@ export async function getCertificateById(certificateId: string): Promise<{ image
  */
 export async function generateCertificateImage(certificateData: CertificateData): Promise<Buffer> {
   try {
+    // Check if canvas is available
+    if (!createCanvas || !loadImage) {
+      // Fallback: Generate a simple text-based certificate
+      return generateFallbackCertificate(certificateData);
+    }
+    
     // Create canvas
     const width = 800;
     const height = 600;
@@ -228,6 +255,34 @@ export async function generateCertificateImage(certificateData: CertificateData)
     return canvas.toBuffer('image/png');
   } catch (error) {
     console.error('Error generating certificate image:', error);
-    throw error;
+    // Fallback to simple certificate generation
+    return generateFallbackCertificate(certificateData);
   }
+}
+
+/**
+ * Fallback certificate generation for when canvas is not available
+ */
+async function generateFallbackCertificate(certificateData: CertificateData): Promise<Buffer> {
+  // Create a simple SVG-based certificate as fallback
+  const svgContent = `
+  <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="white"/>
+    <rect x="10" y="10" width="780" height="580" fill="none" stroke="#2563eb" stroke-width="4"/>
+    <text x="400" y="60" font-family="Arial" font-size="48" font-weight="bold" fill="#2563eb" text-anchor="middle">CERTIFICATE</text>
+    <text x="400" y="100" font-family="Arial" font-size="24" fill="#666666" text-anchor="middle">OF COMPLETION</text>
+    <line x1="50" y1="120" x2="750" y2="120" stroke="#cccccc" stroke-width="1"/>
+    <text x="400" y="160" font-family="Arial" font-size="20" fill="#000000" text-anchor="middle">This certifies that</text>
+    <text x="400" y="200" font-family="Arial" font-size="32" font-weight="bold" fill="#2563eb" text-anchor="middle">${certificateData.participantName}</text>
+    <text x="400" y="240" font-family="Arial" font-size="20" fill="#000000" text-anchor="middle">has successfully completed the course</text>
+    <text x="400" y="280" font-family="Arial" font-size="28" font-weight="bold" fill="#2563eb" text-anchor="middle">${certificateData.courseName}</text>
+    <text x="400" y="330" font-family="Arial" font-size="16" fill="#666666" text-anchor="middle">Issued by: ${certificateData.issuer}</text>
+    <text x="400" y="360" font-family="Arial" font-size="16" fill="#666666" text-anchor="middle">Date: ${new Date(certificateData.issueDate).toLocaleDateString()}</text>
+    <text x="400" y="390" font-family="Arial" font-size="14" fill="#666666" text-anchor="middle">Certificate ID: ${certificateData.id}</text>
+    <text x="400" y="580" font-family="Arial" font-size="16" fill="#999999" text-anchor="middle">Powered by Pramaan</text>
+  </svg>
+  `;
+  
+  // Convert SVG string to buffer
+  return Buffer.from(svgContent.trim(), 'utf-8');
 }

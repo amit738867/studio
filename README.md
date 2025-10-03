@@ -57,3 +57,22 @@ To use Gmail for sending emails:
    ```
 
 Note: Regular Gmail passwords will not work with SMTP. You must use an App Password.
+
+## Deployment to Vercel
+
+To deploy this application to Vercel:
+
+1. Create a new project on Vercel
+2. Connect your Git repository
+3. Add the following environment variables in your Vercel project settings:
+   - `GMAIL_USER` - Your Gmail address for sending emails
+   - `GMAIL_APP_PASSWORD` - Your Gmail app password
+   - `FIREBASE_CLIENT_EMAIL` - Your Firebase service account email
+   - `FIREBASE_PRIVATE_KEY` - Your Firebase service account private key (make sure to escape newlines with `\n`)
+   - `NEXT_PUBLIC_APP_URL` - Your Vercel deployment URL
+
+4. The application includes a fallback for the canvas library that allows it to build even when canvas is not available in the deployment environment.
+
+5. The build process will automatically handle optional dependencies.
+
+Note: The canvas library is used for certificate generation. In deployment environments where canvas cannot be installed, the application will fall back to a simpler SVG-based certificate generation method.

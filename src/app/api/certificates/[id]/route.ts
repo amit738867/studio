@@ -33,6 +33,21 @@ export async function GET(
       });
     }
     
+    // For SVG fallback certificates
+    if (certificate.imageUrl.startsWith('data:text/svg')) {
+      // Extract SVG data
+      const svgData = certificate.imageUrl.split(',')[1];
+      const svgBuffer = Buffer.from(svgData, 'base64');
+      
+      // Return the SVG as a response
+      return new NextResponse(svgBuffer, {
+        headers: {
+          'Content-Type': 'image/svg+xml',
+          'Content-Disposition': `inline; filename="certificate-${certificateId}.svg"`,
+        },
+      });
+    }
+    
     // For production: redirect to the Firebase Storage URL
     return NextResponse.redirect(certificate.imageUrl, 302);
   } catch (error) {

@@ -30,6 +30,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Handle canvas library for server-side rendering
+  webpack: (config) => {
+    config.externals.push({
+      'canvas': 'commonjs canvas',
+    });
+    return config;
+  },
 };
 
 export default nextConfig;
