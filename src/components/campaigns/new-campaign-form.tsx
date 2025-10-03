@@ -12,7 +12,7 @@ import { DialogClose } from '@/components/ui/dialog';
 
 function SubmitButton({ pending }: { pending: boolean }) {
   return (
-    <Button type="submit" disabled={pending} className="w-full">
+    <Button type="submit" disabled={pending} className="w-full bg-blue-600 hover:bg-blue-700">
       {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       Create Campaign
     </Button>
@@ -70,13 +70,13 @@ export function NewCampaignForm() {
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 py-4">
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="campaignName" className="text-right">
+        <Label htmlFor="campaignName" className="text-right text-gray-300">
           Name
         </Label>
         <Input
           id="campaignName"
           name="campaignName"
-          className="col-span-3"
+          className="col-span-3 bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
           placeholder="e.g. Q3 Developer Meetup"
           value={campaignName}
           onChange={(e) => setCampaignName(e.target.value)}
@@ -88,7 +88,7 @@ export function NewCampaignForm() {
        </DialogClose>
       <SubmitButton pending={isSubmitting} />
       {error && (
-        <p className={'text-sm text-red-600 text-center pt-2'}>
+        <p className={'text-sm text-red-400 text-center pt-2'}>
           {error}
         </p>
       )}

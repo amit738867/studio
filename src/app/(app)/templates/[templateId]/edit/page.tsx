@@ -29,7 +29,7 @@ export default function TemplateEditorPage() {
     title: 'Certificate of Completion',
     subtitle: 'This certifies that',
     body: 'has successfully completed the course',
-    issuer: 'CertifyAI',
+    issuer: 'Pramaan',
     date: new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',

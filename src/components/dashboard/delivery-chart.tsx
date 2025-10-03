@@ -20,11 +20,11 @@ const chartData = [
 const chartConfig = {
   delivered: {
     label: 'Delivered',
-    color: 'hsl(var(--chart-2))',
+    color: '#4ade80', // green-500
   },
   failed: {
     label: 'Failed',
-    color: 'hsl(var(--chart-5))',
+    color: '#f87171', // red-400
   },
 } satisfies ChartConfig;
 
@@ -33,15 +33,22 @@ export function DeliveryChart() {
     <div className="h-[350px] w-full">
       <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
         <BarChart accessibilityLayer data={chartData}>
-          <CartesianGrid vertical={false} />
+          <CartesianGrid vertical={false} stroke="#334155" />
           <XAxis
             dataKey="month"
             tickLine={false}
             tickMargin={10}
             axisLine={false}
+            tick={{ fill: '#94a3b8' }}
           />
-          <YAxis />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <YAxis 
+            tick={{ fill: '#94a3b8' }}
+            stroke="#334155"
+          />
+          <ChartTooltip 
+            content={<ChartTooltipContent />} 
+            wrapperClassName="bg-gray-800 border-gray-700 text-white"
+          />
           <Bar dataKey="delivered" fill="var(--color-delivered)" radius={4} />
           <Bar dataKey="failed" fill="var(--color-failed)" radius={4} />
         </BarChart>

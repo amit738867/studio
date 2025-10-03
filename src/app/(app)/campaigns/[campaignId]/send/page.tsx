@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, doc, getDoc } from 'firebase/firestore';
 import { Loader2, ChevronLeft, Send, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { sendCertificateEmails } from '@/ai/flows/send-certificate-emails';
 
 type Participant = {
+    id: string;
     name: string;
     email: string;
     status: string;
@@ -31,12 +32,33 @@ export default function SendCertificatesPage() {
     const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
     const [isSending, setIsSending] = useState(false);
     const [domain, setDomain] = useState('');
+    const [campaignName, setCampaignName] = useState('');
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setDomain(window.location.host);
         }
     }, []);
+
+    // Fetch campaign name
+    useEffect(() => {
+        if (!user || !firestore || !campaignId) return;
+        
+        const fetchCampaignName = async () => {
+            try {
+                const campaignDoc = await getDoc(doc(firestore, 'users', user.uid, 'campaigns', campaignId));
+                if (campaignDoc.exists()) {
+                    const campaignData = campaignDoc.data();
+                    setCampaignName(campaignData?.name || 'Our Event');
+                }
+            } catch (error) {
+                console.warn('Failed to retrieve campaign name:', error);
+                setCampaignName('Our Event');
+            }
+        };
+        
+        fetchCampaignName();
+    }, [user, firestore, campaignId]);
 
     const participantsColRef = useMemoFirebase(() => {
         if (!user || !firestore || !campaignId) return null;
@@ -83,14 +105,40 @@ export default function SendCertificatesPage() {
         return;
       }
       
+      // Ensure domain is set
+      const currentDomain = domain || (typeof window !== 'undefined' ? window.location.host : 'localhost:3000');
+      if (!currentDomain) {
+        toast({
+            variant: "destructive",
+            title: "Configuration Error",
+            description: "Unable to determine the application domain. Please try again.",
+        });
+        return;
+      }
+      
+      // Get selected participant data
+      const selectedParticipantData = participants?.filter(p => selectedParticipants.has(p.id)) || [];
+      
+      console.log('Selected participants:', selectedParticipantData);
+      
+      if (selectedParticipantData.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No participant data",
+            description: "No participant data found for selected participants.",
+        });
+        return;
+      }
+      
       setIsSending(true);
       
       try {
         const result = await sendCertificateEmails({
             campaignId,
+            campaignName,
             userId: user.uid,
-            participantIds: Array.from(selectedParticipants),
-            domain,
+            participants: selectedParticipantData,
+            domain: currentDomain,
         });
 
         if (result.success) {
@@ -104,6 +152,7 @@ export default function SendCertificatesPage() {
         }
 
       } catch (error: any) {
+        console.error('Error sending certificates:', error);
         toast({
             variant: 'destructive',
             title: "Failed to send certificates",

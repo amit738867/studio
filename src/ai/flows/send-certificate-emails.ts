@@ -10,13 +10,20 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { sendEmailTool } from '@/ai/tools/send-email';
-import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, App } from 'firebase-admin/app';
+import { generateAndStoreCertificate } from '@/services/certificate-service';
+
+// Define the participant data structure
+const ParticipantSchema = z.object({
+  id: z.string().describe('The ID of the participant.'),
+  name: z.string().describe('The name of the participant.'),
+  email: z.string().email().describe('The email of the participant.'),
+});
 
 const SendCertificateEmailsInputSchema = z.object({
   campaignId: z.string().describe('The ID of the campaign.'),
+  campaignName: z.string().describe('The name of the campaign.'),
   userId: z.string().describe('The ID of the user who owns the campaign.'),
-  participantIds: z.array(z.string()).describe('An array of participant IDs to send certificates to.'),
+  participants: z.array(ParticipantSchema).describe('An array of participants to send certificates to.'),
   domain: z.string().describe('The domain of the application to construct verification links.'),
 });
 export type SendCertificateEmailsInput = z.infer<typeof SendCertificateEmailsInputSchema>;
@@ -40,90 +47,64 @@ const sendCertificateEmailsFlow = ai.defineFlow(
     name: 'sendCertificateEmailsFlow',
     inputSchema: SendCertificateEmailsInputSchema,
     outputSchema: SendCertificateEmailsOutputSchema,
-    tools: [sendEmailTool],
   },
   async (input) => {
-    // Initialize Firebase Admin SDK within the flow
-    let adminApp: App;
-    if (!getApps().length) {
-      adminApp = initializeApp();
-    } else {
-      adminApp = getApps()[0];
-    }
-    const db = getFirestore(adminApp);
-    
     console.log(`Starting to send emails for campaign: ${input.campaignId}`);
+    console.log('Participants to send emails to:', input.participants);
     
     let sentCount = 0;
     let failedCount = 0;
-    // IMPORTANT: You must use a verified domain in Resend for the 'from' address.
-    // Replace this with your own verified sender email.
-    const fromAddress = 'noreply@certifyai.pro';
+    // Using Gmail sender address
+    const fromAddress = process.env.GMAIL_USER || 'noreply@example.com';
 
-    const campaignRef = db.collection('users').doc(input.userId).collection('campaigns').doc(input.campaignId);
-    
-    for (const participantId of input.participantIds) {
+    for (const participant of input.participants) {
       try {
-        const participantRef = campaignRef.collection('participants').doc(participantId);
-        const participantDoc = await participantRef.get();
+        console.log(`Processing certificate for participant: ${participant.name} (${participant.email})`);
+        
+        // Generate unique certificate ID
+        const certificateId = `cert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Generate and store certificate with QR code
+        const certificateResult = await generateAndStoreCertificate({
+          id: certificateId,
+          participantName: participant.name,
+          courseName: input.campaignName,
+          issueDate: new Date().toISOString(),
+          issuer: 'Pramaan',
+          campaignId: input.campaignId,
+          userId: input.userId,
+          verificationLink: `https://${input.domain}/verify/${input.campaignId}-${participant.id}`,
+          domain: input.domain // Pass the domain to the certificate service
+        });
 
-        if (!participantDoc.exists) {
-          console.warn(`Participant with ID ${participantId} not found. Skipping.`);
-          failedCount++;
-          continue;
+        if (!certificateResult.success) {
+          throw new Error(`Failed to generate certificate: ${certificateResult.error}`);
         }
-        const participant = participantDoc.data()!;
+
+        console.log(`Certificate generated successfully for ${participant.name} with ID: ${certificateResult.certificateId}`);
         
-        // Generate unique certificate link
-        const certificateId = `${input.campaignId}-${participantId}`;
-        const verificationLink = `https://${input.domain}/verify/${certificateId}`;
-        
-        // Construct email body
+        // Construct email subject
         const subject = `Congratulations, ${participant.name}! Here is your certificate.`;
-        const body = `
-          <p>Hello ${participant.name},</p>
-          <p>Congratulations! You have received a certificate for your participation in our event.</p>
-          <p>You can view and download your certificate by clicking the link below:</p>
-          <p><a href="${verificationLink}">${verificationLink}</a></p>
-          <p>Best regards,<br/>The CertifyAI Team</p>
-        `;
         
-        // Send the email using the tool
+        // Send the email using the tool with React template
         const emailResult = await sendEmailTool({
           to: participant.email,
           from: fromAddress,
           subject: subject,
-          html: body,
+          participantName: participant.name,
+          courseName: input.campaignName,
+          verificationLink: certificateResult.certificateUrl,
         });
 
         if (emailResult.error) {
             throw new Error(emailResult.error);
         }
 
-        // Update the DeliveryStatus in Firestore
-        const deliveryRef = campaignRef.collection('deliveries').doc(participantId);
-        await deliveryRef.set({
-            campaignId: input.campaignId,
-            participantId: participantId,
-            status: 'sent',
-            lastUpdated: new Date().toISOString(),
-        }, { merge: true });
-
         sentCount++;
         console.log(`Successfully sent email to ${participant.email}`);
       } catch (e: any) {
         failedCount++;
-        console.error(`Failed to send email for participant ${participantId}:`, e.message);
-
-        // Optionally, log the failure to Firestore
-         const deliveryRef = campaignRef.collection('deliveries').doc(participantId);
-         await deliveryRef.set({
-            campaignId: input.campaignId,
-            participantId: participantId,
-            status: 'failed',
-            lastUpdated: new Date().toISOString(),
-            deliveryDetails: JSON.stringify({ error: e.message }),
-        }, { merge: true });
+        console.error(`Failed to send email for participant ${participant.id}:`, e.message);
       }
     }
 

@@ -11,6 +11,7 @@ export interface CertificateTemplateProps {
   title?: string;
   subtitle?: string;
   body?: string;
+  verificationLink?: string;
   onContentChange?: (field: keyof CertificateTemplateProps, value: string) => void;
 }
 
@@ -48,7 +49,7 @@ const EditableText: React.FC<{
         suppressContentEditableWarning
         onBlur={handleBlur}
         className={`w-full h-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/50 bg-transparent p-2 ${className}`}
-        style={{ textAlign: textAnchor }}
+        style={{ textAlign: textAnchor === 'middle' ? 'center' : textAnchor }}
       >
         {children}
       </div>
@@ -60,10 +61,11 @@ export function CertificateTemplate({
   participantName,
   courseName,
   date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-  issuer = 'CertifyAI',
+  issuer = 'Pramaan',
   title = 'Certificate of Completion',
   subtitle = 'This certifies that',
   body = 'has successfully completed the course',
+  verificationLink = '',
   onContentChange = () => {},
 }: CertificateTemplateProps) {
   return (
@@ -170,6 +172,19 @@ export function CertificateTemplate({
         <text x="550" y="500" textAnchor="middle" className="text-sm fill-muted-foreground">
           Date
         </text>
+        
+        {/* QR Code Placeholder */}
+        {verificationLink && (
+          <>
+            <rect x="650" y="50" width="100" height="100" fill="none" stroke="hsl(var(--border))" strokeWidth="1" />
+            <text x="700" y="100" textAnchor="middle" className="text-xs fill-muted-foreground" dominantBaseline="middle">
+              QR Code
+            </text>
+            <text x="700" y="115" textAnchor="middle" className="text-xs fill-muted-foreground" dominantBaseline="middle">
+              Scan to Verify
+            </text>
+          </>
+        )}
       </svg>
     </div>
   );

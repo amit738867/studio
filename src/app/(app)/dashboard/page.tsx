@@ -1,20 +1,21 @@
-import { DeliveryChart } from '@/components/dashboard/delivery-chart';
-import { StatsCards } from '@/components/dashboard/stats-cards';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/combined-dashboard');
+  }, [router]);
+
   return (
-    <div className="grid gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-      <StatsCards />
-      <Card>
-        <CardHeader>
-          <CardTitle>Delivery Status Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DeliveryChart />
-        </CardContent>
-      </Card>
+    <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-white mb-4">Redirecting...</h1>
+        <p className="text-gray-400">Redirecting to the combined dashboard and campaigns page.</p>
+      </div>
     </div>
   );
 }

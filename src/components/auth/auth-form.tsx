@@ -88,12 +88,13 @@ export function AuthForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel className="text-gray-300">Email</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="name@example.com"
                     type="email"
                     {...field}
+                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </FormControl>
                 <FormMessage />
@@ -105,23 +106,28 @@ export function AuthForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel className="text-gray-300">Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="******" type="password" {...field} />
+                  <Input 
+                    placeholder="******" 
+                    type="password" 
+                    {...field} 
+                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           {authError && (
-            <p className="text-sm text-destructive">{authError}</p>
+            <p className="text-sm text-red-400">{authError}</p>
           )}
           <div className="flex flex-col gap-2 md:flex-row">
             <Button
               type="button"
               onClick={form.handleSubmit(d => handleEmailAuth(d, 'signIn'))}
               disabled={isSubmitting}
-              className="flex-1"
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
@@ -131,7 +137,7 @@ export function AuthForm() {
               variant="secondary"
               onClick={form.handleSubmit(d => handleEmailAuth(d, 'signUp'))}
               disabled={isSubmitting}
-              className="flex-1"
+              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white"
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign Up
@@ -140,15 +146,15 @@ export function AuthForm() {
         </form>
       </Form>
       <div className="flex items-center gap-4">
-        <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">OR</span>
-        <Separator className="flex-1" />
+        <Separator className="flex-1 bg-gray-700" />
+        <span className="text-xs text-gray-400">OR</span>
+        <Separator className="flex-1 bg-gray-700" />
       </div>
       <Button
         variant="outline"
         onClick={handleGoogleAuth}
         disabled={isSubmitting}
-        className="w-full"
+        className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
       >
         {isSubmitting ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
