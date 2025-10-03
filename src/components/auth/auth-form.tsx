@@ -20,7 +20,7 @@ import {
   initiateEmailSignUp,
   initiateEmailSignIn,
   initiateGoogleSignIn,
-} from '@/firebase/non-blocking-login';
+} from '@/firebase/auth-operations';
 import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
@@ -61,14 +61,22 @@ export function AuthForm() {
     // Do not set isSubmitting to false here, user will be redirected on success
   };
 
-  const handleGoogleAuth = () => {
+  const handleGoogleAuth = async () => {
     if (!auth) return;
     setIsSubmitting(true);
     setAuthError(null);
     try {
-      initiateGoogleSignIn(auth);
+      await initiateGoogleSignIn(auth);
+      // On success, the onAuthStateChanged listener will handle the redirect.
+      // We don't need to set isSubmitting to false here.
     } catch (error: any) {
-      setAuthError(error.message);
+      // Handle specific Firebase errors or show a generic message
+      if (error.code === 'auth/popup-closed-by-user') {
+        setAuthError('Sign-in cancelled. Please try again.');
+      } else {
+        setAuthError(error.message || 'An error occurred during Google sign-in.');
+      }
+      setIsSubmitting(false); // Reset button state on failure
     }
   };
 
