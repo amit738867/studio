@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { CertificateTemplate } from '@/components/certificates/certificate-template-1';
@@ -8,17 +9,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, Upload } from 'lucide-react';
+import type { CertificateTemplateProps } from '@/components/certificates/certificate-template-1';
 
 export default function TemplateEditorPage() {
   const params = useParams();
   const templateId = params.templateId as string;
 
-  // In a real app, you would fetch template data based on the templateId.
-  // For now, we'll just display the one template we have.
+  const [templateState, setTemplateState] = useState<CertificateTemplateProps>({
+    participantName: 'Jane Doe',
+    courseName: 'Advanced AI',
+    title: 'Certificate of Completion',
+    subtitle: 'This certifies that',
+    body: 'has successfully completed the course',
+    issuer: 'CertifyAI',
+    date: new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }),
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTemplateState((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
 
   return (
     <div className="space-y-6">
-       <Button variant="outline" asChild>
+      <Button variant="outline" asChild>
         <Link href="/templates">
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to Templates
@@ -29,9 +50,9 @@ export default function TemplateEditorPage() {
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-           <Card className="overflow-hidden">
+          <Card className="overflow-hidden">
             <CardContent className="p-4 bg-secondary/20">
-               <CertificateTemplate participantName="Jane Doe" courseName="Advanced AI" />
+              <CertificateTemplate {...templateState} />
             </CardContent>
           </Card>
         </div>
@@ -55,9 +76,33 @@ export default function TemplateEditorPage() {
                   Upload Logo
                 </Button>
               </div>
-               <div className="space-y-2">
-                <Label htmlFor="course-name">Course Name</Label>
-                <Input id="course-name" defaultValue="Advanced AI" />
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" name="title" value={templateState.title} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subtitle">Subtitle</Label>
+                <Input id="subtitle" name="subtitle" value={templateState.subtitle} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="participantName">Sample Participant Name</Label>
+                <Input id="participantName" name="participantName" value={templateState.participantName} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="body">Body Text</Label>
+                <Input id="body" name="body" value={templateState.body} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="courseName">Course Name</Label>
+                <Input id="courseName" name="courseName" value={templateState.courseName} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="issuer">Issuer</Label>
+                <Input id="issuer" name="issuer" value={templateState.issuer} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input id="date" name="date" value={templateState.date} onChange={handleInputChange} />
               </div>
               <div className="flex justify-end">
                 <Button>Save Changes</Button>

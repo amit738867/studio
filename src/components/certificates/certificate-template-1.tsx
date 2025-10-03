@@ -1,19 +1,25 @@
 'use client';
 
-import { Award } from "lucide-react";
+import { Award } from 'lucide-react';
 
-interface CertificateTemplateProps {
+export interface CertificateTemplateProps {
   participantName: string;
   courseName: string;
   date?: string;
   issuer?: string;
+  title?: string;
+  subtitle?: string;
+  body?: string;
 }
 
 export function CertificateTemplate({
   participantName,
   courseName,
   date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-  issuer = 'CertifyAI'
+  issuer = 'CertifyAI',
+  title = 'Certificate of Completion',
+  subtitle = 'This certifies that',
+  body = 'has successfully completed the course',
 }: CertificateTemplateProps) {
   return (
     <div className="aspect-[1.414/1] w-full bg-background text-foreground rounded-lg border shadow-2xl flex items-center justify-center p-8">
@@ -25,17 +31,17 @@ export function CertificateTemplate({
 
         {/* Foreign object for Award icon */}
         <foreignObject x="360" y="50" width="80" height="80">
-            <div className="flex items-center justify-center h-full w-full">
-                <Award className="w-20 h-20 text-primary" strokeWidth={1.5} />
-            </div>
+          <div className="flex items-center justify-center h-full w-full">
+            <Award className="w-20 h-20 text-primary" strokeWidth={1.5} />
+          </div>
         </foreignObject>
 
         <text x="50%" y="170" textAnchor="middle" className="text-xl font-semibold uppercase tracking-widest fill-muted-foreground">
-          Certificate of Completion
+          {title}
         </text>
 
         <text x="50%" y="220" textAnchor="middle" className="text-lg fill-foreground">
-          This certifies that
+          {subtitle}
         </text>
 
         <text x="50%" y="290" textAnchor="middle" className="text-6xl font-headline font-bold tracking-tight fill-primary-foreground">
@@ -43,13 +49,13 @@ export function CertificateTemplate({
         </text>
 
         <text x="50%" y="350" textAnchor="middle" className="text-lg fill-foreground">
-          has successfully completed the course
+          {body}
         </text>
 
         <text x="50%" y="410" textAnchor="middle" className="text-4xl font-semibold fill-primary-foreground">
           {courseName}
         </text>
-        
+
         {/* Signature and Date Lines */}
         <line x1="150" y1="480" x2="350" y2="480" stroke="hsl(var(--muted-foreground))" strokeWidth="1" />
         <text x="250" y="500" textAnchor="middle" className="text-sm fill-muted-foreground">
@@ -62,7 +68,7 @@ export function CertificateTemplate({
         </text>
 
         <text x="550" y="475" textAnchor="middle" className="text-base font-semibold fill-foreground">
-            {date}
+          {date}
         </text>
       </svg>
     </div>
