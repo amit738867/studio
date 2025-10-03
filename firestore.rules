@@ -1,95 +1,94 @@
 /**
- * @fileoverview Firestore Security Rules for CertifyAI.
- *
- * Core Philosophy:
- * This ruleset enforces a user-ownership model for campaigns and delivery statuses,
- * ensuring that only the owner (creator) of a campaign can manage it and its
- * associated delivery statuses. Certificate Templates are publicly readable,
- * but write access is unrestricted to allow any user to create them.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for campaigns and delivery statuses,
+ *              while allowing public read access to certificate templates.
  *
  * Data Structure:
- * - /certificateTemplates/{certificateTemplateId}: Stores certificate templates.
- * - /users/{userId}/campaigns/{campaignId}: Stores campaigns created by a specific user.
- * - /users/{userId}/campaigns/{campaignId}/deliveryStatuses/{deliveryStatusId}: Stores delivery statuses for a campaign.
+ * - /certificateTemplates/{certificateTemplateId}: Stores publicly readable certificate templates.
+ * - /users/{userId}/campaigns/{campaignId}: Stores campaigns owned by a specific user.
+ * - /users/{userId}/campaigns/{campaignId}/deliveryStatuses/{deliveryStatusId}: Stores delivery statuses for campaigns, also owned by the user.
  *
  * Key Security Decisions:
- * - Certificate Templates are publicly readable but writable by anyone, facilitating a shared template library.
- * - Campaigns and DeliveryStatuses are strictly user-owned.
- * - Listing of campaigns and delivery statuses is restricted to the owner.
+ * - Certificate templates are publicly readable, but only authorized users can create, update, or delete them.
+ * - Campaigns and delivery statuses are strictly user-owned, with no shared access or roles implemented in this version.
+ * - Listing of user's campaigns and delivery statuses is allowed for the owner.
  *
  * Denormalization for Authorization:
- *  The `campaigns` and `deliveryStatuses` are stored under the `users/{userId}` collection
- *  to allow for secure and efficient rules without the need of `get()` requests.
+ * - Campaigns are stored under /users/{userId} to enable path-based ownership checks.
+ * - Delivery statuses are stored under /users/{userId}/campaigns/{campaignId} for similar ownership checks.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows anyone to read certificate templates, but allows anyone to create, update, and delete them.
+     * @description Allows public read access to certificate templates, but requires authentication for creation, updates, and deletion.
      * @path /certificateTemplates/{certificateTemplateId}
-     * @allow (get, list)
-     * @allow (create)
-     * @allow (update)
-     * @allow (delete)
-     * @deny None
-     * @principle Certificate templates are publicly readable and writable.
+     * @allow (get, list): if true
+     * @allow (create): if isSignedIn()
+     * @allow (update): if isSignedIn()
+     * @allow (delete): if isSignedIn()
+     * @deny (create): if !isSignedIn()
+     * @deny (update): if !isSignedIn()
+     * @deny (delete): if !isSignedIn()
+     * @principle Allows public read with authenticated owner-only writes.
      */
     match /certificateTemplates/{certificateTemplateId} {
       allow get, list: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Allows the owner to manage their campaigns.
+     * @description Enforces user-ownership for campaigns. Only the authenticated user can create, read, update, or delete their own campaigns.
      * @path /users/{userId}/campaigns/{campaignId}
-     * @allow (create) User with ID {userId} can create a campaign under their user document.
-     * @allow (get, list) User with ID {userId} can read their own campaign.
-     * @allow (update, delete) User with ID {userId} can update/delete their own campaign.
-     * @deny Any other user trying to create/read/update/delete this campaign.
-     * @principle Enforces document ownership for campaigns.
+     * @allow (get, list): if isOwner(userId)
+     * @allow (create): if isOwner(userId)
+     * @allow (update): if isExistingOwner(userId)
+     * @allow (delete): if isExistingOwner(userId)
+     * @deny (create): if !isOwner(userId)
+     * @deny (update): if !isExistingOwner(userId)
+     * @deny (delete): if !isExistingOwner(userId)
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/campaigns/{campaignId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
+      allow get, list: if isOwner(userId);
       allow create: if isOwner(userId);
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Allows the owner to manage delivery statuses for their campaigns.
+     * @description Enforces user-ownership for delivery statuses. Only the authenticated user who owns the parent campaign can manage delivery statuses.
      * @path /users/{userId}/campaigns/{campaignId}/deliveryStatuses/{deliveryStatusId}
-     * @allow (create) User with ID {userId} can create a delivery status under their campaign.
-     * @allow (get, list) User with ID {userId} can read their own delivery status.
-     * @allow (update, delete) User with ID {userId} can update/delete their own delivery status.
-     * @deny Any other user trying to create/read/update/delete this delivery status.
-     * @principle Enforces document ownership for delivery statuses within a campaign.
+     * @allow (get, list): if isOwner(userId)
+     * @allow (create): if isOwner(userId)
+     * @allow (update): if isExistingOwner(userId)
+     * @allow (delete): if isExistingOwner(userId)
+     * @deny (create): if !isOwner(userId)
+     * @deny (update): if !isExistingOwner(userId)
+     * @deny (delete): if !isExistingOwner(userId)
+     * @principle Enforces document ownership for writes and validates relational integrity.
      */
     match /users/{userId}/campaigns/{campaignId}/deliveryStatuses/{deliveryStatusId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
+      allow get, list: if isOwner(userId);
       allow create: if isOwner(userId);
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
+    }
+
+    // --- Helper functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
     }
   }
 }

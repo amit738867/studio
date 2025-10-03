@@ -52,29 +52,29 @@
           "type": "string",
           "description": "Unique identifier for the participant."
         },
-        "firstName": {
+        "name": {
           "type": "string",
-          "description": "First name of the participant."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "Last name of the participant."
+          "description": "Full name of the participant."
         },
         "email": {
           "type": "string",
           "description": "Email address of the participant.",
           "format": "email"
         },
-        "additionalData": {
-          "type": "string",
-          "description": "Stringified JSON object containing additional participant-specific data. Should be stringified JSON."
+        "status": {
+            "type": "string",
+            "description": "The validation status of the participant's name (e.g., 'valid', 'invalid', 'corrected')."
+        },
+        "originalName": {
+            "type": "string",
+            "description": "The original name from the CSV file."
         }
       },
       "required": [
         "id",
-        "firstName",
-        "lastName",
-        "email"
+        "name",
+        "email",
+        "status"
       ]
     },
     "Campaign": {
@@ -94,13 +94,6 @@
         "certificateTemplateId": {
           "type": "string",
           "description": "Reference to CertificateTemplate. (Relationship: CertificateTemplate 1:N Campaign)"
-        },
-        "participantIds": {
-          "type": "array",
-          "description": "References to Participants. (Relationship: Participant N:N Campaign)",
-          "items": {
-            "type": "string"
-          }
         },
         "createdAt": {
           "type": "string",
@@ -169,68 +162,17 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/certificateTemplates/{certificateTemplateId}",
-        "definition": {
-          "entityName": "CertificateTemplate",
-          "schema": {
-            "$ref": "#/backend/entities/CertificateTemplate"
-          },
-          "description": "Stores certificate templates. Anyone can create certificate templates.",
-          "params": [
-            {
-              "name": "certificateTemplateId",
-              "description": "The unique identifier for the certificate template."
-            }
-          ]
-        }
+    "/users/{userId}/campaigns/{campaignId}": {
+      "schema": {
+        "$ref": "#/entities/Campaign"
       },
-      {
-        "path": "/users/{userId}/campaigns/{campaignId}",
-        "definition": {
-          "entityName": "Campaign",
-          "schema": {
-            "$ref": "#/backend/entities/Campaign"
-          },
-          "description": "Stores campaigns created by a specific user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "campaignId",
-              "description": "The unique identifier for the campaign."
-            }
-          ]
-        }
+      "description": "Stores campaigns created by a specific user."
+    },
+    "/users/{userId}/campaigns/{campaignId}/participants/{participantId}": {
+      "schema": {
+        "$ref": "#/entities/Participant"
       },
-      {
-        "path": "/users/{userId}/campaigns/{campaignId}/deliveryStatuses/{deliveryStatusId}",
-        "definition": {
-          "entityName": "DeliveryStatus",
-          "schema": {
-            "$ref": "#/backend/entities/DeliveryStatus"
-          },
-          "description": "Stores the delivery status of certificates for a specific campaign.  This is nested inside the campaign to easily query all delivery statuses for a campaign.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "campaignId",
-              "description": "The unique identifier for the campaign."
-            },
-            {
-              "name": "deliveryStatusId",
-              "description": "The unique identifier for the delivery status."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to support CertifyAI's features, emphasizing security, scalability, and debuggability. Authorization Independence is achieved through denormalization, specifically within the campaign/deliveryStatus structure. This eliminates the need for `get()` calls in security rules, enabling atomic operations. Segregation ensures that each collection has a homogeneous security posture. The use of path-based ownership for user-related data, alongside membership maps for collaborative data access, streamlines authorization and simplifies security rules.  \n\nSpecifically, DeliveryStatus is nested within a Campaign which is nested within a User.  The CertificateTemplates are stored at the root level because they are intended to be globally available.\n\nTo ensure QAPs, the application uses a combination of structural segregation and the membership map approach. By storing delivery statuses within campaigns, and campaigns within users, list operations can be secured by checking ownership of the parent campaign without needing to filter on the client-side.\n\nIn regards to supporting the core features:\n\n*   **Certificate Template Builder**: Storing templates at root allows any user to create and then each campaign can reference the template.\n*   **Participant Upload**: Participants do not need to be stored in their own collection because the ParticipantId is stored in the DeliveryStatus.\n*   **Bulk Email Distribution**: Delivery Status objects track the email distribution.\n*   **Real-time Delivery Tracking**: Delivery Status objects track the status and any delivery details in stringified JSON format.\n*   **QR Code Verification**: The DeliveryStatus object can hold the URL that a QR code links to in order to verify the certificate."
+      "description": "Stores participants for a specific campaign."
+    }
   }
 }

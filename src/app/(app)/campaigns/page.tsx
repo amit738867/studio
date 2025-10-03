@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { PlusCircle, Loader2, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +36,7 @@ import { format } from 'date-fns';
 export default function CampaignsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
 
   const campaignsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -42,6 +44,10 @@ export default function CampaignsPage() {
   }, [user, firestore]);
 
   const { data: campaigns, isLoading } = useCollection(campaignsQuery);
+
+  const handleCampaignClick = (campaignId: string) => {
+    router.push(`/campaigns/${campaignId}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -90,12 +96,12 @@ export default function CampaignsPage() {
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Recipients</TableHead>
-                  <TableHead>Success Rate</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {campaigns.map((campaign) => (
-                  <TableRow key={campaign.id}>
+                  <TableRow key={campaign.id} onClick={() => handleCampaignClick(campaign.id)} className="cursor-pointer">
                     <TableCell className="font-medium">{campaign.name}</TableCell>
                     <TableCell>
                       {campaign.createdAt ? format(new Date(campaign.createdAt.toDate()), 'yyyy-MM-dd') : 'N/A'}
@@ -104,7 +110,9 @@ export default function CampaignsPage() {
                       <Badge variant="outline">{campaign.status || 'Draft'}</Badge>
                     </TableCell>
                     <TableCell>{campaign.participantIds?.length || 0}</TableCell>
-                    <TableCell>N/A</TableCell>
+                    <TableCell>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

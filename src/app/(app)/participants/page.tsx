@@ -6,11 +6,10 @@ export default function ParticipantsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Participants</h1>
         <p className="text-muted-foreground">
-          Upload your participant list via CSV. Our AI will validate and
-          suggest corrections for names.
+          This is a standalone participant validator. To add participants
+          to a campaign, go to the campaign's page.
         </p>
       </div>
-      <ParticipantValidator />
     </div>
   );
 }

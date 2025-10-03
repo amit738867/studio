@@ -24,6 +24,7 @@ const ValidateAndCorrectParticipantNamesOutputSchema = z.array(
     correctedName: z.string().describe('The corrected participant name, if any correction was needed. Otherwise, the original name.'),
     isValid: z.boolean().describe('Whether the name is valid or not.'),
     reason: z.string().optional().describe('Reasoning behind the decision. If there was a correction or invalidation, explain why.'),
+    email: z.string().email().optional().describe('The participant email address.'),
   })
 ).describe('An array of validation and correction results for each participant name.');
 

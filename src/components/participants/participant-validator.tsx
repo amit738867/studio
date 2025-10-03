@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useRef, useActionState } from 'react';
+import { useState, useRef, useActionState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { AlertCircle, CheckCircle, FileUp, Loader2, RefreshCw } from 'lucide-react';
+import { collection } from 'firebase/firestore';
+import { useFirebase, addDocumentNonBlocking } from '@/firebase';
 
-import { validateNamesAction } from '@/app/(app)/participants/actions';
+import { validateParticipantsAction } from '@/app/(app)/participants/actions';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -33,6 +35,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '../ui/badge';
 import type { ValidateAndCorrectParticipantNamesOutput } from '@/ai/flows/validate-and-correct-participant-names';
+import { useToast } from '@/hooks/use-toast';
 
 const initialState = {
   results: [] as ValidateAndCorrectParticipantNamesOutput,
@@ -49,12 +52,16 @@ function SubmitButton() {
   );
 }
 
-export function ParticipantValidator() {
-  const [formState, formAction] = useActionState(validateNamesAction, initialState);
+export function ParticipantValidator({ campaignId }: { campaignId: string }) {
+  const [formState, formAction] = useActionState(validateParticipantsAction, initialState);
   const [file, setFile] = useState<File | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
-  const [selectedColumn, setSelectedColumn] = useState<string>('');
+  const [selectedNameColumn, setSelectedNameColumn] = useState<string>('');
+  const [selectedEmailColumn, setSelectedEmailColumn] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isPending, startTransition] = useTransition();
+  const { firestore, user } = useFirebase();
+  const { toast } = useToast();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -64,7 +71,8 @@ export function ParticipantValidator() {
       const firstLine = text.split('\n')[0];
       const parsedHeaders = firstLine.split(',').map((h) => h.trim());
       setHeaders(parsedHeaders);
-      setSelectedColumn('');
+      setSelectedNameColumn('');
+      setSelectedEmailColumn('');
       if (formState.results.length > 0) {
         formState.results = [];
       }
@@ -74,21 +82,57 @@ export function ParticipantValidator() {
   const handleReset = () => {
     setFile(null);
     setHeaders([]);
-    setSelectedColumn('');
+    setSelectedNameColumn('');
+    setSelectedEmailColumn('');
     formState.results = [];
     formState.error = null;
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
+  
+  const handleAcceptAndContinue = () => {
+    if (!firestore || !user || formState.results.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not save participants. Firebase not available or no results to save.",
+        });
+        return;
+    }
+
+    startTransition(() => {
+        const participantsColRef = collection(firestore, 'users', user.uid, 'campaigns', campaignId, 'participants');
+        
+        let successCount = 0;
+        formState.results.forEach((result) => {
+            if (result.isValid) {
+                const participantData = {
+                    name: result.correctedName,
+                    email: result.email, // Assuming email is on the result
+                    status: result.isValid ? 'valid' : 'invalid',
+                    originalName: result.originalName,
+                };
+                addDocumentNonBlocking(participantsColRef, participantData);
+                successCount++;
+            }
+        });
+        toast({
+            title: "Participants Saved",
+            description: `${successCount} valid participants have been added to the campaign.`,
+        });
+        handleReset(); // Clear the form
+    });
+  }
 
   return (
     <Card>
       <form action={formAction}>
+        <input type="hidden" name="campaignId" value={campaignId} />
         <CardHeader>
           <CardTitle>Upload Participants</CardTitle>
           <CardDescription>
-            Select a CSV file and choose the column with participant names for validation.
+            Select a CSV file and choose the columns for participant names and emails for validation.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
@@ -104,29 +148,51 @@ export function ParticipantValidator() {
               required
             />
             <p className="text-sm text-muted-foreground">
-              Note: Simple CSV parsing is used. Names should not contain commas.
+              Note: Simple CSV parsing is used. Names and emails should not contain commas.
             </p>
           </div>
           {headers.length > 0 && (
-            <div className="grid w-full items-center gap-2">
-              <Label htmlFor="nameColumn">Name Column</Label>
-              <Select
-                name="nameColumn"
-                value={selectedColumn}
-                onValueChange={setSelectedColumn}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select column with names" />
-                </SelectTrigger>
-                <SelectContent>
-                  {headers.map((header) => (
-                    <SelectItem key={header} value={header}>
-                      {header}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="grid w-full items-center gap-2">
+                    <Label htmlFor="nameColumn">Name Column</Label>
+                    <Select
+                        name="nameColumn"
+                        value={selectedNameColumn}
+                        onValueChange={setSelectedNameColumn}
+                        required
+                    >
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select name column" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {headers.map((header) => (
+                            <SelectItem key={`name-${header}`} value={header}>
+                            {header}
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                 </div>
+                 <div className="grid w-full items-center gap-2">
+                    <Label htmlFor="emailColumn">Email Column</Label>
+                    <Select
+                        name="emailColumn"
+                        value={selectedEmailColumn}
+                        onValueChange={setSelectedEmailColumn}
+                        required
+                    >
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select email column" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {headers.map((header) => (
+                            <SelectItem key={`email-${header}`} value={header}>
+                            {header}
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                 </div>
             </div>
           )}
         </CardContent>
@@ -134,7 +200,7 @@ export function ParticipantValidator() {
           <Button type="button" variant="outline" onClick={handleReset}>
             Reset
           </Button>
-          {file && selectedColumn && <SubmitButton />}
+          {file && selectedNameColumn && selectedEmailColumn && <SubmitButton />}
         </CardFooter>
       </form>
 
@@ -155,6 +221,7 @@ export function ParticipantValidator() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Original Name</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Corrected Name</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden md:table-cell">Reason</TableHead>
@@ -164,6 +231,7 @@ export function ParticipantValidator() {
                 {formState.results.map((result, index) => (
                   <TableRow key={index}>
                     <TableCell>{result.originalName}</TableCell>
+                    <TableCell>{result.email}</TableCell>
                     <TableCell className="font-medium">
                       {result.correctedName !== result.originalName ? (
                         <span className="text-primary-foreground">{result.correctedName}</span>
@@ -189,7 +257,10 @@ export function ParticipantValidator() {
             </Table>
           </div>
            <div className="flex justify-end mt-4">
-              <Button>Accept & Continue</Button>
+              <Button onClick={handleAcceptAndContinue} disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Accept & Save Participants
+              </Button>
             </div>
         </div>
       )}
