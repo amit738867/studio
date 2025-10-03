@@ -18,24 +18,31 @@ const EditableText: React.FC<{
   x: string;
   y: string;
   className: string;
-  textAnchor: "middle" | "start" | "end";
+  textAnchor: 'middle' | 'start' | 'end';
   children: string;
   width: number;
   height: number;
   onBlur: (value: string) => void;
 }> = ({ x, y, className, textAnchor, children, width, height, onBlur }) => {
-
   const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     onBlur(e.currentTarget.innerText);
   };
-  
-  // To vertically center, we need to adjust y based on height.
-  // The y prop for foreignObject is the top corner. We want to center the text box around the original text's y position.
-  const foreignObjectY = parseInt(y) - height / 2;
 
+  // Adjust coordinates for centering based on textAnchor
+  let foreignObjectX = parseInt(x);
+  if (textAnchor === 'middle') {
+    foreignObjectX -= width / 2;
+  } else if (textAnchor === 'end') {
+    foreignObjectX -= width;
+  }
+  
+  // The y prop for foreignObject is the top corner. We want to center the text box around the original text's y position.
+  // We'll approximate the vertical centering by shifting it up by about half its height.
+  // The 'dominant-baseline' and 'alignment-baseline' are hard to replicate perfectly for a div.
+  const foreignObjectY = parseInt(y) - height / 2 - 8; // Small adjustment for better visual alignment
 
   return (
-    <foreignObject x={parseInt(x) - width / 2} y={foreignObjectY} width={width} height={height}>
+    <foreignObject x={foreignObjectX} y={foreignObjectY} width={width} height={height}>
       <div
         contentEditable
         suppressContentEditableWarning
@@ -83,7 +90,7 @@ export function CertificateTemplate({
         </text>
 
         <EditableText
-          x="50%"
+          x="400"
           y="290"
           width={600}
           height={80}
@@ -99,7 +106,7 @@ export function CertificateTemplate({
         </text>
 
         <EditableText
-          x="50%"
+          x="400"
           y="410"
           width={600}
           height={60}
