@@ -1,23 +1,9 @@
 {
+  "version": 2,
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/next",
-      "config": {
-        "includeFiles": [
-          "node_modules/canvas/**"
-        ]
-      }
+      "use": "@vercel/next"
     }
-  ],
-  "build": {
-    "env": {
-      "NODE_JS_VERSION": "22"
-    }
-  },
-  "functions": {
-    "src/app/api/certificates/**/*": {
-      "maxDuration": 60
-    }
-  }
+  ]
 }

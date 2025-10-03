@@ -76,3 +76,14 @@ To deploy this application to Vercel:
 5. The build process will automatically handle optional dependencies.
 
 Note: The canvas library is used for certificate generation. In deployment environments where canvas cannot be installed, the application will fall back to a simpler SVG-based certificate generation method.
+
+## Vercel Configuration
+
+The `vercel.json` file is configured to avoid conflicts between the `builds` and `functions` properties. This configuration ensures that the Next.js application is built correctly without any deployment issues.
+
+To verify the deployment configuration, you can run:
+```bash
+node scripts/verify-deployment.js
+```
+
+This script will check for common configuration issues and ensure that your deployment settings are correct.
