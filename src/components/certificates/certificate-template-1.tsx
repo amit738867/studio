@@ -1,6 +1,7 @@
 'use client';
 
 import { Award } from 'lucide-react';
+import React from 'react';
 
 export interface CertificateTemplateProps {
   participantName: string;
@@ -10,7 +11,43 @@ export interface CertificateTemplateProps {
   title?: string;
   subtitle?: string;
   body?: string;
+  onContentChange?: (field: keyof CertificateTemplateProps, value: string) => void;
 }
+
+const EditableText: React.FC<{
+  x: string;
+  y: string;
+  className: string;
+  textAnchor: "middle" | "start" | "end";
+  children: string;
+  width: number;
+  height: number;
+  onBlur: (value: string) => void;
+}> = ({ x, y, className, textAnchor, children, width, height, onBlur }) => {
+
+  const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    onBlur(e.currentTarget.innerText);
+  };
+  
+  // To vertically center, we need to adjust y based on height.
+  // The y prop for foreignObject is the top corner. We want to center the text box around the original text's y position.
+  const foreignObjectY = parseInt(y) - height / 2;
+
+
+  return (
+    <foreignObject x={parseInt(x) - width / 2} y={foreignObjectY} width={width} height={height}>
+      <div
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={handleBlur}
+        className={`w-full h-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/50 bg-transparent p-2 ${className}`}
+        style={{ textAlign: textAnchor }}
+      >
+        {children}
+      </div>
+    </foreignObject>
+  );
+};
 
 export function CertificateTemplate({
   participantName,
@@ -20,6 +57,7 @@ export function CertificateTemplate({
   title = 'Certificate of Completion',
   subtitle = 'This certifies that',
   body = 'has successfully completed the course',
+  onContentChange = () => {},
 }: CertificateTemplateProps) {
   return (
     <div className="aspect-[1.414/1] w-full bg-background text-foreground rounded-lg border shadow-2xl flex items-center justify-center p-8">
@@ -44,17 +82,33 @@ export function CertificateTemplate({
           {subtitle}
         </text>
 
-        <text x="50%" y="290" textAnchor="middle" className="text-6xl font-headline font-bold tracking-tight fill-primary-foreground">
+        <EditableText
+          x="50%"
+          y="290"
+          width={600}
+          height={80}
+          className="text-6xl font-headline font-bold tracking-tight fill-primary-foreground"
+          textAnchor="middle"
+          onBlur={(value) => onContentChange('participantName', value)}
+        >
           {participantName}
-        </text>
+        </EditableText>
 
         <text x="50%" y="350" textAnchor="middle" className="text-lg fill-foreground">
           {body}
         </text>
 
-        <text x="50%" y="410" textAnchor="middle" className="text-4xl font-semibold fill-primary-foreground">
+        <EditableText
+          x="50%"
+          y="410"
+          width={600}
+          height={60}
+          className="text-4xl font-semibold fill-primary-foreground"
+          textAnchor="middle"
+          onBlur={(value) => onContentChange('courseName', value)}
+        >
           {courseName}
-        </text>
+        </EditableText>
 
         {/* Signature and Date Lines */}
         <line x1="150" y1="480" x2="350" y2="480" stroke="hsl(var(--muted-foreground))" strokeWidth="1" />

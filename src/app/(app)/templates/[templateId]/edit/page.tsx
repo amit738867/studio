@@ -37,6 +37,13 @@ export default function TemplateEditorPage() {
     }));
   };
 
+  const handleContentEditableChange = (field: keyof CertificateTemplateProps, value: string) => {
+    setTemplateState(prevState => ({
+      ...prevState,
+      [field]: value
+    }));
+  }
+
   return (
     <div className="space-y-6">
       <Button variant="outline" asChild>
@@ -52,7 +59,10 @@ export default function TemplateEditorPage() {
         <div className="md:col-span-2">
           <Card className="overflow-hidden">
             <CardContent className="p-4 bg-secondary/20">
-              <CertificateTemplate {...templateState} />
+              <CertificateTemplate 
+                {...templateState}
+                onContentChange={handleContentEditableChange}
+              />
             </CardContent>
           </Card>
         </div>
@@ -85,16 +95,8 @@ export default function TemplateEditorPage() {
                 <Input id="subtitle" name="subtitle" value={templateState.subtitle} onChange={handleInputChange} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="participantName">Sample Participant Name</Label>
-                <Input id="participantName" name="participantName" value={templateState.participantName} onChange={handleInputChange} />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="body">Body Text</Label>
                 <Input id="body" name="body" value={templateState.body} onChange={handleInputChange} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="courseName">Course Name</Label>
-                <Input id="courseName" name="courseName" value={templateState.courseName} onChange={handleInputChange} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="issuer">Issuer</Label>
