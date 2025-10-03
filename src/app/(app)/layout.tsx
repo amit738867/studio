@@ -9,15 +9,13 @@ import {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen">
-        <Sidebar>
-          <SidebarNav />
-        </Sidebar>
-        <SidebarInset>
-          <Header />
-          <main className="p-4 lg:p-6">{children}</main>
-        </SidebarInset>
-      </div>
+      <Sidebar collapsible="icon">
+        <SidebarNav />
+      </Sidebar>
+      <SidebarInset>
+        <Header />
+        <main className="p-4 lg:p-6">{children}</main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
