@@ -45,20 +45,21 @@ export function AuthForm() {
     },
   });
 
-  const handleEmailAuth = (data: FormValues, action: 'signIn' | 'signUp') => {
+  const handleEmailAuth = async (data: FormValues, action: 'signIn' | 'signUp') => {
     if (!auth) return;
     setIsSubmitting(true);
     setAuthError(null);
     try {
       if (action === 'signUp') {
-        initiateEmailSignUp(auth, data.email, data.password);
+        await initiateEmailSignUp(auth, data.email, data.password);
       } else {
-        initiateEmailSignIn(auth, data.email, data.password);
+        await initiateEmailSignIn(auth, data.email, data.password);
       }
+      // On success, the onAuthStateChanged listener will handle the redirect.
     } catch (error: any) {
       setAuthError(error.message);
-    } 
-    // Do not set isSubmitting to false here, user will be redirected on success
+      setIsSubmitting(false); // Reset on error
+    }
   };
 
   const handleGoogleAuth = async () => {
@@ -68,9 +69,7 @@ export function AuthForm() {
     try {
       await initiateGoogleSignIn(auth);
       // On success, the onAuthStateChanged listener will handle the redirect.
-      // We don't need to set isSubmitting to false here.
     } catch (error: any) {
-      // Handle specific Firebase errors or show a generic message
       if (error.code === 'auth/popup-closed-by-user') {
         setAuthError('Sign-in cancelled. Please try again.');
       } else {
