@@ -2,13 +2,17 @@
 
 import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
 import { ParticipantValidator } from '@/components/participants/participant-validator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import Image from 'next/image';
+import { ParticipantList } from '@/components/participants/participant-list';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function CampaignDetailsPage() {
   const { user } = useUser();
@@ -16,16 +20,27 @@ export default function CampaignDetailsPage() {
   const params = useParams();
   const campaignId = params.campaignId as string;
 
+  const templates = PlaceHolderImages.filter(img => img.imageHint.includes('template'));
+
   const campaignDocRef = useMemoFirebase(() => {
     if (!user || !firestore || !campaignId) return null;
     return doc(firestore, 'users', user.uid, 'campaigns', campaignId);
   }, [user, firestore, campaignId]);
 
-  const { data: campaign, isLoading } = useDoc(campaignDocRef);
+  const { data: campaign, isLoading: isCampaignLoading } = useDoc(campaignDocRef);
+
+  const participantsColRef = useMemoFirebase(() => {
+    if (!user || !firestore || !campaignId) return null;
+    return collection(firestore, 'users', user.uid, 'campaigns', campaignId, 'participants');
+  }, [user, firestore, campaignId]);
+
+  const { data: participants, isLoading: areParticipantsLoading } = useCollection(participantsColRef);
+
+  const isLoading = isCampaignLoading || areParticipantsLoading;
 
   return (
     <div className="space-y-6">
-       <Button variant="outline" asChild>
+      <Button variant="outline" asChild>
         <Link href="/campaigns">
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to Campaigns
@@ -46,14 +61,73 @@ export default function CampaignDetailsPage() {
 
       {!isLoading && campaign && (
         <>
-           <div>
+          <div>
             <h1 className="text-3xl font-bold tracking-tight">{campaign.name}</h1>
-            <p className="text-muted-foreground">
-              Upload your participant list via CSV. Our AI will validate and
-              suggest corrections for names.
-            </p>
           </div>
-          <ParticipantValidator campaignId={campaignId} />
+
+          {participants && participants.length > 0 ? (
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Manage Participants
+                    </CardTitle>
+                    <CardDescription>
+                      View, add, or edit participants for this campaign.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ParticipantList campaignId={campaignId} participants={participants} />
+                    <div className="mt-4">
+                      <h3 className="font-semibold mb-2">Add More Participants</h3>
+                      <ParticipantValidator campaignId={campaignId} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Select a Template
+                    </CardTitle>
+                    <CardDescription>
+                      Choose a certificate template for this campaign.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-4 md:grid-cols-2">
+                    {templates.slice(0, 2).map((template) => (
+                      <div key={template.id} className="border rounded-lg overflow-hidden group cursor-pointer">
+                        <Image
+                          src={template.imageUrl}
+                          alt={template.description}
+                          width={300}
+                          height={210}
+                          className="w-full h-auto object-cover aspect-[1.42]"
+                          data-ai-hint={template.imageHint}
+                        />
+                         <div className="p-2 bg-background/80">
+                           <Button variant="secondary" size="sm" className="w-full">Select</Button>
+                         </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : (
+             <>
+                <p className="text-muted-foreground">
+                  Upload your participant list via CSV. Our AI will validate and
+                  suggest corrections for names.
+                </p>
+                <ParticipantValidator campaignId={campaignId} />
+            </>
+          )}
         </>
       )}
     </div>
