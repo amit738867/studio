@@ -81,13 +81,29 @@ export function CertificateTemplate({
           </div>
         </foreignObject>
 
-        <text x="50%" y="170" textAnchor="middle" className="text-xl font-semibold uppercase tracking-widest fill-muted-foreground">
+        <EditableText
+          x="400"
+          y="170"
+          width={600}
+          height={40}
+          className="text-xl font-semibold uppercase tracking-widest fill-muted-foreground"
+          textAnchor="middle"
+          onBlur={(value) => onContentChange('title', value)}
+        >
           {title}
-        </text>
+        </EditableText>
 
-        <text x="50%" y="220" textAnchor="middle" className="text-lg fill-foreground">
+        <EditableText
+          x="400"
+          y="220"
+          width={600}
+          height={30}
+          className="text-lg fill-foreground"
+          textAnchor="middle"
+          onBlur={(value) => onContentChange('subtitle', value)}
+        >
           {subtitle}
-        </text>
+        </EditableText>
 
         <EditableText
           x="400"
@@ -101,9 +117,17 @@ export function CertificateTemplate({
           {participantName}
         </EditableText>
 
-        <text x="50%" y="350" textAnchor="middle" className="text-lg fill-foreground">
+        <EditableText
+          x="400"
+          y="350"
+          width={600}
+          height={30}
+          className="text-lg fill-foreground"
+          textAnchor="middle"
+          onBlur={(value) => onContentChange('body', value)}
+        >
           {body}
-        </text>
+        </EditableText>
 
         <EditableText
           x="400"
@@ -119,17 +143,32 @@ export function CertificateTemplate({
 
         {/* Signature and Date Lines */}
         <line x1="150" y1="480" x2="350" y2="480" stroke="hsl(var(--muted-foreground))" strokeWidth="1" />
-        <text x="250" y="500" textAnchor="middle" className="text-sm fill-muted-foreground">
+        <EditableText
+          x="250"
+          y="500"
+          width={200}
+          height={30}
+          className="text-sm fill-muted-foreground"
+          textAnchor="middle"
+          onBlur={(value) => onContentChange('issuer', value)}
+        >
           {issuer}
-        </text>
-
+        </EditableText>
+        
         <line x1="450" y1="480" x2="650" y2="480" stroke="hsl(var(--muted-foreground))" strokeWidth="1" />
+         <EditableText
+          x="550"
+          y="475"
+          width={200}
+          height={30}
+          className="text-base font-semibold fill-foreground"
+          textAnchor="middle"
+          onBlur={(value) => onContentChange('date', value)}
+        >
+          {date}
+        </EditableText>
         <text x="550" y="500" textAnchor="middle" className="text-sm fill-muted-foreground">
           Date
-        </text>
-
-        <text x="550" y="475" textAnchor="middle" className="text-base font-semibold fill-foreground">
-          {date}
         </text>
       </svg>
     </div>

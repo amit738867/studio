@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { CertificateTemplate } from '@/components/certificates/certificate-template-1';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, Upload } from 'lucide-react';
 import type { CertificateTemplateProps } from '@/components/certificates/certificate-template-1';
@@ -28,14 +27,6 @@ export default function TemplateEditorPage() {
       day: 'numeric',
     }),
   });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setTemplateState((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
 
   const handleContentEditableChange = (field: keyof CertificateTemplateProps, value: string) => {
     setTemplateState(prevState => ({
@@ -86,26 +77,7 @@ export default function TemplateEditorPage() {
                   Upload Logo
                 </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" name="title" value={templateState.title} onChange={handleInputChange} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subtitle">Subtitle</Label>
-                <Input id="subtitle" name="subtitle" value={templateState.subtitle} onChange={handleInputChange} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="body">Body Text</Label>
-                <Input id="body" name="body" value={templateState.body} onChange={handleInputChange} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="issuer">Issuer</Label>
-                <Input id="issuer" name="issuer" value={templateState.issuer} onChange={handleInputChange} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
-                <Input id="date" name="date" value={templateState.date} onChange={handleInputChange} />
-              </div>
+              
               <div className="flex justify-end">
                 <Button>Save Changes</Button>
               </div>
