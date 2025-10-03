@@ -95,6 +95,10 @@
           "type": "string",
           "description": "Reference to CertificateTemplate. (Relationship: CertificateTemplate 1:N Campaign)"
         },
+        "certificateTemplateData": {
+          "type": "string",
+          "description": "Stringified JSON object containing the customized certificate template data for this campaign."
+        },
         "createdAt": {
           "type": "string",
           "description": "Timestamp indicating when the campaign was created.",

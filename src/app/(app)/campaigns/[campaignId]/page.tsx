@@ -75,8 +75,18 @@ export default function CampaignDetailsPage() {
 
       {!isLoading && campaign && (
         <>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{campaign.name}</h1>
+          <div className="flex justify-between items-start">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">{campaign.name}</h1>
+            </div>
+            {participants && participants.length > 0 && campaign.certificateTemplateId && (
+                 <Button asChild>
+                    <Link href={`/campaigns/${campaignId}/send`}>
+                        <Send className="mr-2 h-4 w-4" />
+                        Proceed to Send
+                    </Link>
+                 </Button>
+            )}
           </div>
 
           {participants && participants.length > 0 ? (
@@ -151,9 +161,9 @@ export default function CampaignDetailsPage() {
                          </Button>
                          {campaign.certificateTemplateId === 'modern-certificate' && (
                             <Button size="sm" className="w-full" asChild>
-                               <Link href={`/templates/${campaign.certificateTemplateId}/edit`}>
+                               <Link href={`/templates/${campaign.certificateTemplateId}/edit?campaignId=${campaignId}`}>
                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                 Continue with this template
+                                 Customize Template
                                </Link>
                             </Button>
                          )}
