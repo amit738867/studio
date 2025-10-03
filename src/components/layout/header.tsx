@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Award, LayoutDashboard, Users, FileText, Send, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { UserNav } from './user-nav';
 
 const navItems = [
   {
@@ -57,6 +58,7 @@ export function Header() {
           <Bell className="h-4 w-4" />
           <span className="sr-only">Notifications</span>
         </Button>
+        <UserNav />
       </div>
     </header>
   );
