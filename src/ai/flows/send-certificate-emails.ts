@@ -11,17 +11,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { sendEmailTool } from '@/ai/tools/send-email';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, App } from 'firebase-admin/app';
-
-// Ensure Firebase Admin is initialized only once.
-let adminApp: App;
-if (!getApps().length) {
-  adminApp = initializeApp();
-} else {
-  adminApp = getApps()[0];
-}
-const db = getFirestore(adminApp);
-
+import { initializeApp, getApps, App, deleteApp } from 'firebase-admin/app';
 
 const SendCertificateEmailsInputSchema = z.object({
   campaignId: z.string().describe('The ID of the campaign.'),
@@ -53,6 +43,15 @@ const sendCertificateEmailsFlow = ai.defineFlow(
     tools: [sendEmailTool],
   },
   async (input) => {
+    // Initialize Firebase Admin SDK within the flow
+    let adminApp: App;
+    if (!getApps().length) {
+      adminApp = initializeApp();
+    } else {
+      adminApp = getApps()[0];
+    }
+    const db = getFirestore(adminApp);
+    
     console.log(`Starting to send emails for campaign: ${input.campaignId}`);
     
     let sentCount = 0;
