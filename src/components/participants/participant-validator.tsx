@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { AlertCircle, CheckCircle, FileUp, Loader2, RefreshCw } from 'lucide-react';
 
 import { validateNamesAction } from '@/app/(app)/participants/actions';
@@ -50,7 +50,7 @@ function SubmitButton() {
 }
 
 export function ParticipantValidator() {
-  const [formState, formAction] = useFormState(validateNamesAction, initialState);
+  const [formState, formAction] = useActionState(validateNamesAction, initialState);
   const [file, setFile] = useState<File | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
   const [selectedColumn, setSelectedColumn] = useState<string>('');
