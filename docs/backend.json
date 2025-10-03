@@ -62,20 +62,15 @@
           "format": "email"
         },
         "status": {
-            "type": "string",
-            "description": "The validation status of the participant's name (e.g., 'valid', 'invalid', 'corrected')."
+          "type": "string",
+          "description": "The validation status of the participant's name (e.g., 'valid', 'invalid', 'corrected')."
         },
         "originalName": {
-            "type": "string",
-            "description": "The original name from the CSV file."
+          "type": "string",
+          "description": "The original name from the CSV file."
         }
       },
-      "required": [
-        "id",
-        "name",
-        "email",
-        "status"
-      ]
+      "required": ["id", "name", "email", "status"]
     },
     "Campaign": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -160,10 +155,7 @@
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "google.com"
-    ]
+    "providers": ["password", "google.com"]
   },
   "firestore": {
     "/users/{userId}/campaigns/{campaignId}": {
@@ -177,6 +169,12 @@
         "$ref": "#/entities/Participant"
       },
       "description": "Stores participants for a specific campaign."
+    },
+    "/users/{userId}/campaigns/{campaignId}/deliveries/{deliveryId}": {
+      "schema": {
+        "$ref": "#/entities/DeliveryStatus"
+      },
+      "description": "Stores certificate delivery statuses for a campaign."
     }
   }
 }

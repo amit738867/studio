@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow, TableHead } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { sendCertificateEmails } from '@/ai/flows/send-certificate-emails';
 
 type Participant = {
     name: string;
@@ -56,7 +57,7 @@ export default function SendCertificatesPage() {
         setSelectedParticipants(newSelection);
     };
     
-    const handleSendCertificates = () => {
+    const handleSendCertificates = async () => {
       if (selectedParticipants.size === 0) {
         toast({
             variant: "destructive",
@@ -67,19 +68,32 @@ export default function SendCertificatesPage() {
       }
       
       setIsSending(true);
-      // In a real application, this would trigger a backend process
-      // to generate and email certificates.
-      console.log("Sending certificates to:", Array.from(selectedParticipants));
-
-      // Simulate network delay
-      setTimeout(() => {
-        setIsSending(false);
-        toast({
-            title: "Certificates Sent!",
-            description: `${selectedParticipants.size} certificate(s) have been queued for delivery.`,
+      
+      try {
+        const result = await sendCertificateEmails({
+            campaignId,
+            participantIds: Array.from(selectedParticipants),
         });
-        router.push(`/campaigns/${campaignId}`);
-      }, 2000);
+
+        if (result.success) {
+             toast({
+                title: "Certificates Sent!",
+                description: `${result.sentCount} certificate(s) have been queued for delivery.`,
+            });
+            router.push(`/campaigns/${campaignId}`);
+        } else {
+            throw new Error(result.error || 'An unknown error occurred.');
+        }
+
+      } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: "Failed to send certificates",
+            description: error.message || "An unexpected error occurred while sending certificates.",
+        })
+      } finally {
+        setIsSending(false);
+      }
     }
 
 
