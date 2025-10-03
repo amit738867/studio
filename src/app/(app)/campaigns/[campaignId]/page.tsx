@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { ParticipantValidator } from '@/components/participants/participant-validator';
-import { Loader2, Users, FileText } from 'lucide-react';
+import { Loader2, Users, FileText, Send, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
@@ -100,6 +100,24 @@ export default function CampaignDetailsPage() {
                     </div>
                   </CardContent>
                 </Card>
+                 {campaign.certificateTemplateId && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Send className="h-5 w-5" />
+                        Delivery Status
+                      </CardTitle>
+                      <CardDescription>
+                        Track the delivery of certificates.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-center text-center p-8 text-muted-foreground">
+                        <p>Delivery features coming soon.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
               
               <div className="space-y-6">
@@ -114,14 +132,14 @@ export default function CampaignDetailsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="grid gap-4 md:grid-cols-1">
-                    <div className="border rounded-lg overflow-hidden group cursor-pointer">
+                    <div className="border rounded-lg overflow-hidden group">
                       <div className="p-4 bg-secondary/20">
                           <CertificateTemplate
                             participantName="John Doe"
                             courseName="Introduction to AI"
                           />
                       </div>
-                       <div className="p-2 bg-background/80">
+                       <div className="p-2 bg-background/80 flex flex-col gap-2">
                          <Button 
                            variant={campaign.certificateTemplateId === 'modern-certificate' ? 'default' : 'secondary'} 
                            size="sm" 
@@ -131,6 +149,14 @@ export default function CampaignDetailsPage() {
                          >
                            {campaign.certificateTemplateId === 'modern-certificate' ? 'Selected' : 'Select'}
                          </Button>
+                         {campaign.certificateTemplateId === 'modern-certificate' && (
+                            <Button size="sm" className="w-full" asChild>
+                               <Link href={`/templates/${campaign.certificateTemplateId}/edit`}>
+                                 <CheckCircle className="mr-2 h-4 w-4" />
+                                 Continue with this template
+                               </Link>
+                            </Button>
+                         )}
                        </div>
                     </div>
                   </CardContent>
