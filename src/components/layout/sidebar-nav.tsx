@@ -19,7 +19,6 @@ import {
   SidebarMenuItem,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
 
 const navItems = [
   {
