@@ -11,7 +11,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { sendEmailTool } from '@/ai/tools/send-email';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, App, deleteApp } from 'firebase-admin/app';
+import { initializeApp, getApps, App } from 'firebase-admin/app';
 
 const SendCertificateEmailsInputSchema = z.object({
   campaignId: z.string().describe('The ID of the campaign.'),
