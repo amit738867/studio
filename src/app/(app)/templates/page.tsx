@@ -1,4 +1,6 @@
+
 import { PlusCircle } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CertificateTemplate } from '@/components/certificates/certificate-template-1';
@@ -29,7 +31,9 @@ export default function TemplatesPage() {
                <CertificateTemplate participantName="Jane Doe" courseName="Advanced AI" />
             </CardContent>
             <CardFooter className="p-4 pt-0 flex justify-end gap-2">
-                <Button variant="outline" size="sm">Edit</Button>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/templates/modern-certificate/edit">Edit</Link>
+                </Button>
                 <Button variant="secondary" size="sm">Preview</Button>
             </CardFooter>
           </Card>

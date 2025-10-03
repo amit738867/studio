@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { ParticipantValidator } from '@/components/participants/participant-validator';
 import { Loader2, Users, FileText } from 'lucide-react';
@@ -12,20 +12,27 @@ import { ChevronLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ParticipantList } from '@/components/participants/participant-list';
 import { CertificateTemplate } from '@/components/certificates/certificate-template-1';
+import { useToast } from '@/hooks/use-toast';
+import type { WithId } from '@/firebase';
 
+type Campaign = {
+  name: string;
+  certificateTemplateId?: string;
+};
 
 export default function CampaignDetailsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const params = useParams();
   const campaignId = params.campaignId as string;
+  const { toast } = useToast();
 
   const campaignDocRef = useMemoFirebase(() => {
     if (!user || !firestore || !campaignId) return null;
     return doc(firestore, 'users', user.uid, 'campaigns', campaignId);
   }, [user, firestore, campaignId]);
 
-  const { data: campaign, isLoading: isCampaignLoading } = useDoc(campaignDocRef);
+  const { data: campaign, isLoading: isCampaignLoading } = useDoc<Campaign>(campaignDocRef);
 
   const participantsColRef = useMemoFirebase(() => {
     if (!user || !firestore || !campaignId) return null;
@@ -35,6 +42,15 @@ export default function CampaignDetailsPage() {
   const { data: participants, isLoading: areParticipantsLoading } = useCollection(participantsColRef);
 
   const isLoading = isCampaignLoading || areParticipantsLoading;
+
+  const handleSelectTemplate = (templateId: string) => {
+    if (!campaignDocRef) return;
+    updateDocumentNonBlocking(campaignDocRef, { certificateTemplateId: templateId });
+    toast({
+      title: 'Template Selected',
+      description: `Template "${templateId}" has been assigned to this campaign.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -106,7 +122,15 @@ export default function CampaignDetailsPage() {
                           />
                       </div>
                        <div className="p-2 bg-background/80">
-                         <Button variant="secondary" size="sm" className="w-full">Select</Button>
+                         <Button 
+                           variant={campaign.certificateTemplateId === 'modern-certificate' ? 'default' : 'secondary'} 
+                           size="sm" 
+                           className="w-full"
+                           onClick={() => handleSelectTemplate('modern-certificate')}
+                           disabled={campaign.certificateTemplateId === 'modern-certificate'}
+                         >
+                           {campaign.certificateTemplateId === 'modern-certificate' ? 'Selected' : 'Select'}
+                         </Button>
                        </div>
                     </div>
                   </CardContent>
