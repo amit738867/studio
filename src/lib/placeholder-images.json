@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "certificate-template-1",
+      "description": "A placeholder for a certificate template.",
+      "imageUrl": "https://images.unsplash.com/photo-1568137224279-f19f0f825447?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjZXJ0aWZpY2F0ZSUyMHRlbXBsYXRlfGVufDB8fHx8MTc1OTQ3NjgyMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "certificate template"
+    },
+    {
+      "id": "certificate-template-2",
+      "description": "A placeholder for another certificate template.",
+      "imageUrl": "https://images.unsplash.com/photo-1605699717808-feb7baf52a98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y2VydGlmaWNhdGUlMjB0ZW1wbGF0ZXxlbnwwfHx8fDE3NTk0NzY4MjB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "certificate template"
+    },
+    {
+      "id": "certificate-template-3",
+      "description": "A placeholder for a third certificate template.",
+      "imageUrl": "https://images.unsplash.com/photo-1579642984417-0c00620f8e94?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjZXJ0aWZpY2F0ZSUyMHRlbXBsYXRlfGVufDB8fHx8MTc1OTQ3NjgyMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "certificate template"
+    },
+    {
+      "id": "qr-code-placeholder",
+      "description": "A placeholder QR code.",
+      "imageUrl": "https://images.unsplash.com/photo-1661169398346-aecdc4f5068b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxxciUyMGNvZGV8ZW58MHx8fHwxNzU5NDQ4OTExfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "qr code"
+    }
+  ]
 }
