@@ -1,4 +1,7 @@
-import { PlusCircle } from 'lucide-react';
+'use client';
+
+import { useMemo } from 'react';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,39 +28,21 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { NewCampaignForm } from '@/components/campaigns/new-campaign-form';
-
-const campaigns = [
-  {
-    name: 'Q2 Developer Summit',
-    date: '2024-06-15',
-    status: 'Completed',
-    recipients: 250,
-    successRate: '99.2%',
-  },
-  {
-    name: 'AI Workshop Series',
-    date: '2024-05-20',
-    status: 'Completed',
-    recipients: 180,
-    successRate: '97.8%',
-  },
-  {
-    name: 'Annual Hackathon 2024',
-    date: '2024-04-30',
-    status: 'Completed',
-    recipients: 520,
-    successRate: '98.5%',
-  },
-  {
-    name: 'Project Management Webinar',
-    date: '2024-03-10',
-    status: 'Completed',
-    recipients: 300,
-    successRate: '100%',
-  },
-];
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 export default function CampaignsPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const campaignsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, 'users', user.uid, 'campaigns'), orderBy('createdAt', 'desc'));
+  }, [user, firestore]);
+
+  const { data: campaigns, isLoading } = useCollection(campaignsQuery);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -89,33 +74,48 @@ export default function CampaignsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Campaigns</CardTitle>
-          <CardDescription>A list of your recent certificate distribution campaigns.</CardDescription>
+          <CardDescription>A list of your certificate distribution campaigns.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Campaign</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Recipients</TableHead>
-                <TableHead>Success Rate</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {campaigns.map((campaign) => (
-                <TableRow key={campaign.name}>
-                  <TableCell className="font-medium">{campaign.name}</TableCell>
-                  <TableCell>{campaign.date}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{campaign.status}</Badge>
-                  </TableCell>
-                  <TableCell>{campaign.recipients}</TableCell>
-                  <TableCell>{campaign.successRate}</TableCell>
+          {isLoading && (
+             <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+             </div>
+          )}
+          {!isLoading && campaigns && campaigns.length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campaign</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Recipients</TableHead>
+                  <TableHead>Success Rate</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {campaigns.map((campaign) => (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="font-medium">{campaign.name}</TableCell>
+                    <TableCell>
+                      {campaign.createdAt ? format(new Date(campaign.createdAt.toDate()), 'yyyy-MM-dd') : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{campaign.status || 'Draft'}</Badge>
+                    </TableCell>
+                    <TableCell>{campaign.participantIds?.length || 0}</TableCell>
+                    <TableCell>N/A</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+           {!isLoading && (!campaigns || campaigns.length === 0) && (
+            <div className="text-center p-8 text-muted-foreground">
+                <p>No campaigns found.</p>
+                <p>Click "New Campaign" to get started.</p>
+            </div>
+           )}
         </CardContent>
       </Card>
     </div>
