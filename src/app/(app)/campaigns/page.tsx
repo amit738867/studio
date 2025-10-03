@@ -16,6 +16,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { NewCampaignForm } from '@/components/campaigns/new-campaign-form';
 
 const campaigns = [
   {
@@ -58,10 +67,23 @@ export default function CampaignsPage() {
             Manage and track your certificate distribution campaigns.
           </p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Campaign
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Campaign
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Campaign</DialogTitle>
+              <DialogDescription>
+                Enter the details for your new campaign below.
+              </DialogDescription>
+            </DialogHeader>
+            <NewCampaignForm />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card>
