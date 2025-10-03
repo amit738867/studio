@@ -10,13 +10,13 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const SendCertificateEmailsInputSchema = z.object({
+const SendCertificateEmailsInputSchema = z.object({
   campaignId: z.string().describe('The ID of the campaign.'),
   participantIds: z.array(z.string()).describe('An array of participant IDs to send certificates to.'),
 });
 export type SendCertificateEmailsInput = z.infer<typeof SendCertificateEmailsInputSchema>;
 
-export const SendCertificateEmailsOutputSchema = z.object({
+const SendCertificateEmailsOutputSchema = z.object({
   success: z.boolean().describe('Whether the emails were sent successfully.'),
   sentCount: z.number().describe('The number of emails sent.'),
   error: z.string().optional().describe('Any error that occurred.'),
