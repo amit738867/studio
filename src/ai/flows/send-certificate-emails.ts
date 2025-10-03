@@ -57,7 +57,9 @@ const sendCertificateEmailsFlow = ai.defineFlow(
     
     let sentCount = 0;
     let failedCount = 0;
-    const fromAddress = 'noreply@certifyai.pro'; // It's recommended to use a verified domain in Resend.
+    // IMPORTANT: You must use a verified domain in Resend for the 'from' address.
+    // Replace this with your own verified sender email.
+    const fromAddress = 'noreply@certifyai.pro';
 
     const campaignRef = db.collection('users').doc(input.userId).collection('campaigns').doc(input.campaignId);
     
