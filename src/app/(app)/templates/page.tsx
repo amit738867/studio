@@ -1,11 +1,9 @@
-import Image from 'next/image';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { CertificateTemplate } from '@/components/certificates/certificate-template-1';
 
 export default function TemplatesPage() {
-  const templates = PlaceHolderImages.filter(img => img.imageHint.includes('template'));
 
   return (
     <div className="space-y-6">
@@ -22,30 +20,19 @@ export default function TemplatesPage() {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {templates.map((template, index) => (
-          <Card key={template.id} className="overflow-hidden">
-            <CardHeader className="p-0">
-              <div className="aspect-[1.42] w-full">
-                <Image
-                  src={template.imageUrl}
-                  alt={template.description}
-                  width={600}
-                  height={420}
-                  className="w-full h-full object-cover"
-                  data-ai-hint={template.imageHint}
-                />
-              </div>
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+          <Card className="overflow-hidden">
+             <CardHeader>
+              <CardTitle className="text-lg">Modern Certificate</CardTitle>
             </CardHeader>
-            <CardContent className="p-4">
-              <CardTitle className="text-lg">Template {index + 1}</CardTitle>
+            <CardContent className="p-4 bg-secondary/20">
+               <CertificateTemplate participantName="Jane Doe" courseName="Advanced AI" />
             </CardContent>
             <CardFooter className="p-4 pt-0 flex justify-end gap-2">
                 <Button variant="outline" size="sm">Edit</Button>
                 <Button variant="secondary" size="sm">Preview</Button>
             </CardFooter>
           </Card>
-        ))}
       </div>
     </div>
   );

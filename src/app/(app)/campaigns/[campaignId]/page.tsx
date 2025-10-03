@@ -10,17 +10,15 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import Image from 'next/image';
 import { ParticipantList } from '@/components/participants/participant-list';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { CertificateTemplate } from '@/components/certificates/certificate-template-1';
+
 
 export default function CampaignDetailsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const params = useParams();
   const campaignId = params.campaignId as string;
-
-  const templates = PlaceHolderImages.filter(img => img.imageHint.includes('template'));
 
   const campaignDocRef = useMemoFirebase(() => {
     if (!user || !firestore || !campaignId) return null;
@@ -99,22 +97,18 @@ export default function CampaignDetailsPage() {
                       Choose a certificate template for this campaign.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="grid gap-4 md:grid-cols-2">
-                    {templates.slice(0, 2).map((template) => (
-                      <div key={template.id} className="border rounded-lg overflow-hidden group cursor-pointer">
-                        <Image
-                          src={template.imageUrl}
-                          alt={template.description}
-                          width={300}
-                          height={210}
-                          className="w-full h-auto object-cover aspect-[1.42]"
-                          data-ai-hint={template.imageHint}
-                        />
-                         <div className="p-2 bg-background/80">
-                           <Button variant="secondary" size="sm" className="w-full">Select</Button>
-                         </div>
+                  <CardContent className="grid gap-4 md:grid-cols-1">
+                    <div className="border rounded-lg overflow-hidden group cursor-pointer">
+                      <div className="p-4 bg-secondary/20">
+                          <CertificateTemplate
+                            participantName="John Doe"
+                            courseName="Introduction to AI"
+                          />
                       </div>
-                    ))}
+                       <div className="p-2 bg-background/80">
+                         <Button variant="secondary" size="sm" className="w-full">Select</Button>
+                       </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
