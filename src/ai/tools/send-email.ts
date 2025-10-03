@@ -34,8 +34,8 @@ export const sendEmailTool = ai.defineTool(
     if (!apiKey) {
       const errorMsg = 'RESEND_API_KEY environment variable is not set.';
       console.error(errorMsg);
-      // It's important to throw an error here so the flow can catch it.
-      throw new Error(errorMsg);
+      // It's important to return an error object that the flow can handle.
+      return { error: errorMsg };
     }
 
     const resend = new Resend(apiKey);
