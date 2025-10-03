@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -30,6 +30,13 @@ export default function SendCertificatesPage() {
 
     const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
     const [isSending, setIsSending] = useState(false);
+    const [domain, setDomain] = useState('');
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setDomain(window.location.host);
+        }
+    }, []);
 
     const participantsColRef = useMemoFirebase(() => {
         if (!user || !firestore || !campaignId) return null;
@@ -67,12 +74,23 @@ export default function SendCertificatesPage() {
         return;
       }
       
+      if (!user) {
+         toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "You must be logged in to send certificates.",
+        });
+        return;
+      }
+      
       setIsSending(true);
       
       try {
         const result = await sendCertificateEmails({
             campaignId,
+            userId: user.uid,
             participantIds: Array.from(selectedParticipants),
+            domain,
         });
 
         if (result.success) {
@@ -82,7 +100,7 @@ export default function SendCertificatesPage() {
             });
             router.push(`/campaigns/${campaignId}`);
         } else {
-            throw new Error(result.error || 'An unknown error occurred.');
+            throw new Error(result.error || `Failed to send ${result.failedCount} certificate(s).`);
         }
 
       } catch (error: any) {
