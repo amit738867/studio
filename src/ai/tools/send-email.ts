@@ -34,6 +34,7 @@ export const sendEmailTool = ai.defineTool(
     if (!apiKey) {
       const errorMsg = 'RESEND_API_KEY environment variable is not set.';
       console.error(errorMsg);
+      // It's important to throw an error here so the flow can catch it.
       throw new Error(errorMsg);
     }
 
@@ -49,6 +50,7 @@ export const sendEmailTool = ai.defineTool(
 
       if (error) {
         console.error('Resend API Error:', error);
+        // Return an error object that the flow can inspect.
         return { error: error.message };
       }
 
@@ -56,6 +58,7 @@ export const sendEmailTool = ai.defineTool(
       return { id: data?.id };
     } catch (e: any) {
       console.error('Failed to send email:', e);
+      // Return a generic error object.
       return { error: e.message || 'An unknown error occurred while sending the email.' };
     }
   }

@@ -11,16 +11,17 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { sendEmailTool } from '@/ai/tools/send-email';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { firebaseConfig } from '@/firebase/config';
+import { initializeApp, getApps, App } from 'firebase-admin/app';
 
-// Initialize Firebase Admin SDK if not already initialized
+// Ensure Firebase Admin is initialized only once.
+let adminApp: App;
 if (!getApps().length) {
-  initializeApp({
-    projectId: firebaseConfig.projectId,
-  });
+  adminApp = initializeApp();
+} else {
+  adminApp = getApps()[0];
 }
-const db = getFirestore();
+const db = getFirestore(adminApp);
+
 
 const SendCertificateEmailsInputSchema = z.object({
   campaignId: z.string().describe('The ID of the campaign.'),
@@ -87,12 +88,16 @@ const sendCertificateEmailsFlow = ai.defineFlow(
         `;
         
         // Send the email using the tool
-        await sendEmailTool({
+        const emailResult = await sendEmailTool({
           to: participant.email,
           from: fromAddress,
           subject: subject,
           html: body,
         });
+
+        if (emailResult.error) {
+            throw new Error(emailResult.error);
+        }
 
         // Update the DeliveryStatus in Firestore
         const deliveryRef = campaignRef.collection('deliveries').doc(participantId);
@@ -127,7 +132,7 @@ const sendCertificateEmailsFlow = ai.defineFlow(
       success: failedCount === 0,
       sentCount: sentCount,
       failedCount: failedCount,
-      error: failedCount > 0 ? `Failed to send ${failedCount} email(s).` : undefined,
+      error: failedCount > 0 ? `Failed to send ${failedCount} email(s). Check server logs for details.` : undefined,
     };
   }
 );
